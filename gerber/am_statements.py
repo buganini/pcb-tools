@@ -329,6 +329,8 @@ class AMVectorLinePrimitive(AMPrimitive):
 
             lines.append(Line(prev_point, cur_point, aperture))
 
+            prev_point = cur_point
+
         return Outline(lines, units=units, level_polarity=self._level_polarity)
 
 
@@ -823,7 +825,7 @@ class AMThermalPrimitive(AMPrimitive):
 
                 lines.append(Line(prev_point, cur_point, aperture))
 
-            prev_point = cur_point
+                prev_point = cur_point
 
             outlines.append(Outline(lines, units=units, level_polarity=self._level_polarity))
 
@@ -941,6 +943,8 @@ class AMCenterLinePrimitive(AMPrimitive):
             cur_point = rotate_point(point, self.rotation, self.center)
 
             lines.append(Line(prev_point, cur_point, aperture))
+
+            prev_point = cur_point
 
         return Outline(lines, units=units, level_polarity=self._level_polarity)
 

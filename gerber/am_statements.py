@@ -316,23 +316,41 @@ class AMVectorLinePrimitive(AMPrimitive):
         when rotated.
         """
 
-        # Use a line to generate our vertices easily
-        line = Line(self.start, self.end, Rectangle(None, self.width, self.width))
-        vertices = line.vertices
+        start = rotate_point(self.start, self.rotation, (0, 0))
+        end = rotate_point(self.end, self.rotation, (0, 0))
 
-        aperture = Circle((0, 0), 0)
+        if start[0] == end[0]: # use rectangle
+            return Rectangle(
+                (
+                    (start[0]+end[0])/2,
+                    (start[1]+end[1])/2
+                ),
+                self.width,
+                abs(start[1]-end[1]),
+                units=units,
+                level_polarity=self._level_polarity
+            )
+        elif start[1] == end[1]: # use rectangle
+            return Rectangle(
+                (
+                    (start[0]+end[0])/2,
+                    (start[1]+end[1])/2
+                ),
+                abs(start[0]-end[0]),
+                self.width,
+                units=units,
+                level_polarity=self._level_polarity
+            )
+        else: # use region
+            len = math.sqrt((end[0] - start[0])**2 + (end[1] - start[1])**2)
+            perp_vec = ((end[1] - start[1])*self.width/2/len, -(end[0] - start[0])*self.width/2/len)
 
-        lines = []
-        prev_point = rotate_point(vertices[-1], self.rotation, (0, 0))
-        for point in vertices:
-            cur_point = rotate_point(point, self.rotation, (0, 0))
-
-            lines.append(Line(prev_point, cur_point, aperture))
-
-            prev_point = cur_point
-
-        return Outline(lines, units=units, level_polarity=self._level_polarity)
-
+            lines = []
+            lines.append(Line((start[0]+perp_vec[0], start[1]+perp_vec[1]), (end[0]+perp_vec[0], end[1]+perp_vec[1]), Circle((0, 0), 0)))
+            lines.append(Line(((end[0]+perp_vec[0], end[1]+perp_vec[1])), ((end[0]-perp_vec[0], end[1]-perp_vec[1])), Circle((0, 0), 0)))
+            lines.append(Line(((end[0]-perp_vec[0], end[1]-perp_vec[1])), ((start[0]-perp_vec[0], start[1]-perp_vec[1])), Circle((0, 0), 0)))
+            lines.append(Line(((start[0]-perp_vec[0], start[1]-perp_vec[1])), (start[0]+perp_vec[0], start[1]+perp_vec[1]), Circle((0, 0), 0)))
+            return Region(lines, level_polarity=self._level_polarity)
 
 class AMOutlinePrimitive(AMPrimitive):
     """ Aperture Macro Outline primitive. Code 4.
